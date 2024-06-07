@@ -339,7 +339,7 @@ const filterApps = computed(() => {
 	</div>
 	<PipyLog v-if="logOpen" @close="() => logOpen = false"/>
 	<Apps :apps="filterApps" v-if="appsOpen" @close="() => appsOpen = false" @reload="loaddata(true, 1500)"/>
-	<ConfirmDialog></ConfirmDialog>
+
 </template>
 
 <style lang="scss" scoped>

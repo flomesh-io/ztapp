@@ -7,5 +7,5 @@ fn main() {
 	} else {
 		println!("PATH: {}", std::env::var("PATH").unwrap());
 	}
-	ztm_lib::run();
+	ztapp_lib::run();
 }

@@ -1,4 +1,4 @@
-package com.flomesh.ztm
+package com.flomesh.ztapp
 
 import android.content.BroadcastReceiver
 import android.content.Context

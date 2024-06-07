@@ -2,15 +2,17 @@
 import { ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
+import AppService from '@/service/AppService';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 		
 const router = useRouter();
 const store = useStore();
+const appService = new AppService();
 const logs = computed(() => {
 	return store.getters['account/logs']
 });
 const props = defineProps(['apps']);
-const emits = defineEmits(['close']);
+const emits = defineEmits(['close','reload']);
 const hide = () => {
 	emits('close','')
 }
@@ -21,23 +23,20 @@ const pages = computed(()=>{
 	return _pages>0?new Array(_pages):[];
 });
 const appPageSize = 8;
-const appPage = computed(()=>(page)=>{
-	return (props.apps||[]).filter((n,i) => i>=page*appPageSize && i< (page+1)*appPageSize);
-})
 const openWebview = (app)=>{
 	const proxy = "socks5://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;
 	store.commit('webview/setTarget', {
 		icon: app.icon,
 		name: app.name,
 		url: app.url,
-		proxy,
+		proxy: app.proxy,
 	});
 	
 	try{
 		// const appWindow = new Window(`${app.name}-window`);
 		const webview = new WebviewWindow(`${app.name}-webview`, {
 			url: app.url,
-			proxyUrl: proxy,
+			proxyUrl: app.proxy,
 			title: app.name,
 			width:960
 		});
@@ -59,6 +58,15 @@ const openWebview = (app)=>{
 const target = computed(()=>{
 	return store.getters['webview/target']
 })
+const removeApp = (app) => {
+	appService.removeApp(app, () => {
+		emits('reload','')
+	})
+}
+const manage = ref(false);
+const appPage = computed(()=>(page)=>{
+	return (props.apps||[]).filter((n,i) => i>=page*appPageSize && i< (page+1)*appPageSize);
+})
 </script>
 
 <template>
@@ -66,16 +74,23 @@ const target = computed(()=>{
 	<div class="container_pannel">
 	    <div class="container_terminal"></div>
 			<div class="flex actions">
-				<Button  v-tooltip.left="'Close'"  severity="help" text rounded aria-label="Filter" @click="hide" >
-					<i class="pi pi-times " />
-				</Button>
+				<div class="flex-item">
+				<ToggleButton class="transparent" v-model="manage"  onIcon="pi pi-lock-open" 
+				            offIcon="pi pi-lock"  :onLabel="'Manage'" :offLabel="'.'"/>
+				</div>
+				<div class="flex-item text-right">
+					<Button  v-tooltip.left="'Close'"  severity="help" text rounded aria-label="Filter" @click="hide" >
+						<i class="pi pi-times " />
+					</Button>
+				</div>
 			</div>
 	    <div class="terminal_body py-2 px-4" v-if="pages.length > 0">
 				<Carousel :showNavigators="false" :value="pages" :numVisible="1" :numScroll="1" >
 						<template #item="slotProps">
-							<div class="pt-5" style="min-height: 250px;">
+							<div class="pt-1" style="min-height: 220px;">
 								<div class="grid text-center" >
-										<div @click="openWebview(app)" class="col-3 py-4" v-for="(app) in appPage(slotProps.index)">
+										<div @click="openWebview(app)" class="col-3 py-4 relative" v-for="(app) in appPage(slotProps.index)">
+											<i @click.stop="removeApp(app)" v-show="manage" class="pi pi-times  bg-primary-500 absolute pointer text-white-alpha-60 " style="width:16px;height: 16px;line-height: 16px;;border-radius: 50%; right: 16px;top: 12px;"  />
 											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;"/>
 											<div class="mt-1">
 												<b class="text-white opacity-90">{{app.name}}</b>
@@ -105,9 +120,10 @@ const target = computed(()=>{
 		opacity: 0.5;
 	}
 	.actions{
-		position: fixed;
-		top: 5px;
-		right: 10px;
+		left: 0px;
+		padding: 10px;
+		display: flex;
+		right: 0px;
 		:deep(.p-button){
 			padding-left: 5px;
 			padding-right: 5px;
@@ -115,6 +131,13 @@ const target = computed(()=>{
 	}
 	:deep(.p-radiobutton .p-radiobutton-box){
 		background-color: #41403A;
+	}
+	:deep(.p-togglebutton){
+		border: none;
+		color: transparent;
+	}
+	:deep(.p-togglebutton .pi){
+		color: #fff !important;
 	}
 	.terminal_toolbar {
 	  display: flex;

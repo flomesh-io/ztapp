@@ -62,12 +62,12 @@ const placeholder = computed(() => {
 		return `${props.embed?'':_vs}Check for errors.`;
 	} else if(!playing.value){
 		return `${_vs}Off.`;
-	} else if(!apps.value || apps.value.length ==0){
+	} else if(!filterApps.value || filterApps.value.length ==0){
 		return `${props.embed?'':_vs}First, import an App.`;
-	} else if(apps.value.length == 1){
+	} else if(filterApps.value.length == 1){
 		return `${_vs}1 App.`;
 	} else {
-		return `${_vs}${apps.value.length} ${apps.value.length>1?'Apps':'App'}.`;
+		return `${_vs}${filterApps.value.length} ${filterApps.value.length>1?'Apps':'App'}.`;
 	}
 });
 onMounted(() => {
@@ -183,6 +183,21 @@ const loaddata = async (open, timer) => {
 	}, timer||100);
 }
 
+const filterApps = computed(() => {
+	const has = {};
+	const rtn = [];
+	apps.value.forEach(app=>{
+		const proxy = "socks5://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;
+		if(!has[`${app.name}-${proxy}-${app.url}`]){
+			has[`${app.name}-${proxy}-${app.url}`] = true;
+			rtn.push({
+				...app,
+				proxy
+			})
+		}
+	})
+	return rtn;
+})
 </script>
 
 <template>
@@ -207,9 +222,9 @@ const loaddata = async (open, timer) => {
 				<Button v-if="!isLogined" class="w-20rem" @click="goLogin">Login</Button>
 				<Select 
 				v-else
-				:options="apps" 
+				:options="filterApps" 
 				optionLabel="label" 
-				:filter="apps.length>10"
+				:filter="filterApps.length>10"
 				:loading="loading"
 				:placeholder="placeholder" 
 				class="transparent">
@@ -323,7 +338,7 @@ const loaddata = async (open, timer) => {
 		</div>
 	</div>
 	<PipyLog v-if="logOpen" @close="() => logOpen = false"/>
-	<Apps :apps="apps" v-if="appsOpen" @close="() => appsOpen = false"/>
+	<Apps :apps="filterApps" v-if="appsOpen" @close="() => appsOpen = false" @reload="loaddata(true, 1500)"/>
 	<ConfirmDialog></ConfirmDialog>
 </template>
 

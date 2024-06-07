@@ -4,7 +4,8 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import AppService from '@/service/AppService';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-		
+import { Webview } from '@tauri-apps/api/webview'
+import { getCurrent } from '@tauri-apps/api/window'
 const router = useRouter();
 const store = useStore();
 const appService = new AppService();
@@ -23,6 +24,9 @@ const pages = computed(()=>{
 	return _pages>0?new Array(_pages):[];
 });
 const appPageSize = 8;
+const platform = computed(() => {
+	return store.getters['account/platform']
+});
 const openWebview = (app)=>{
 	store.commit('webview/setTarget', {
 		icon: app.icon,
@@ -43,17 +47,34 @@ const openWebview = (app)=>{
 			options.url = "http://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;;
 			delete options.proxyUrl;
 		}
-		const webview = new WebviewWindow(`${app.name}-webview`, options);
-		webview.once('tauri://created', function (d) {
-			console.log('tauri://created')
-			console.log(d)
-		// webview successfully created
-		});
-		webview.once('tauri://error', function (e) {
-			console.log('tauri://error')
-			console.log(e)
-		// an error happened creating the webview
-		});
+		if(platform.value=='android'){
+			options.x = 0;
+			options.y = 0;
+			options.height = 800;
+			const webview = new Webview(getCurrent(),`${app.name}-webview`, options);
+			webview.once('tauri://created', function (d) {
+				console.log('tauri://created')
+				console.log(d)
+			// webview successfully created
+			});
+			webview.once('tauri://error', function (e) {
+				console.log('tauri://error')
+				console.log(e)
+			// an error happened creating the webview
+			});
+		} else {
+			const webview = new WebviewWindow(`${app.name}-webview`, options);
+			webview.once('tauri://created', function (d) {
+				console.log('tauri://created')
+				console.log(d)
+			// webview successfully created
+			});
+			webview.once('tauri://error', function (e) {
+				console.log('tauri://error')
+				console.log(e)
+			// an error happened creating the webview
+			});
+		}
 	}catch(e){
 		console.log(e)
 	}
@@ -93,9 +114,9 @@ const appPage = computed(()=>(page)=>{
 						<template #item="slotProps">
 							<div class="pt-1" style="min-height: 220px;">
 								<div class="grid text-center" >
-										<div @click="openWebview(app)" class="col-3 py-4 relative" v-for="(app) in appPage(slotProps.index)">
+										<div @click="openWebview(app)" class="col-3 py-4 relative text-center" v-for="(app) in appPage(slotProps.index)">
 											<i @click.stop="removeApp(app)" v-show="manage" class="pi pi-times  bg-primary-500 absolute pointer text-white-alpha-60 " style="width:16px;height: 16px;line-height: 16px;;border-radius: 50%; right: 16px;top: 12px;"  />
-											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;"/>
+											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;margin: auto;"/>
 											<div class="mt-1">
 												<b class="text-white opacity-90">{{app.name}}</b>
 											</div>

@@ -1,4 +1,4 @@
-package com.flomesh.ztapp
+package com.flomesh.ztm
 
 import android.os.Bundle
 import android.content.Intent

@@ -1,4 +1,4 @@
-import { request } from './common/request';
+import { request,requestNM } from './common/request';
 import toast from "@/utils/toast";
 import confirm from "@/utils/confirm";
 import PipyProxyService from '@/service/PipyProxyService';
@@ -87,15 +87,15 @@ export default class AppService {
 	}
 	removeApp(app, callback) {
 		confirm.remove(() => {
-			const ip = (app?.port?.listen?.ip||'127.0.0.1');
+			const ip = app?.port?.listen?.ip;
 			const port = app?.port?.listen?.port;
 			pipyProxyService.getMesh(app.name)
 				.then(mesh => {
 					localStorage.removeItem(`${app.name}-icon`);
 					localStorage.removeItem(`${app.name}-url`);
 					localStorage.removeItem(`${app.name}-svc`);
-					request(`/api/meshes/${app.name}/endpoints/${mesh?.agent?.id}/ports/${ip}/tcp/${port}`,"DELETE").then((res) => {
-						request(`/api/meshes/${app.name}`,"DELETE").then((res) => {
+					requestNM(`/api/meshes/${app.name}/endpoints/${mesh?.agent?.id}/ports/${ip}/tcp/${port}`,"DELETE").then((res) => {
+						requestNM(`/api/meshes/${app.name}`,"DELETE").then((res) => {
 							!!callback && callback(res);
 						}).catch(err => {
 							!!callback && callback(err);

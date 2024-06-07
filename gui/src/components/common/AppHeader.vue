@@ -16,7 +16,8 @@ const back = () => {
 }
 
 const toggleLeft = () => {
-	store.commit('account/setMobileLeftbar', !store.getters['account/mobileLeftbar']);
+	// store.commit('account/setMobileLeftbar', !store.getters['account/mobileLeftbar']);
+	home();
 }
 const platform = computed(() => {
 	return store.getters['account/platform']

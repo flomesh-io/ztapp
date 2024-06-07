@@ -65,7 +65,7 @@ const loginGuard = (to, from, next, options) => {
   } else if(to.path == "/root"){
 		if(!!window.__TAURI_INTERNALS__ ){
 			platform().then((pm)=>{
-				if(pm != "android"){
+				if(true){
 					resize(455,350,false);
 					next();
 				}else {

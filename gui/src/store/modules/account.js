@@ -38,6 +38,7 @@ export default {
       return state.platform;
     },
     pid: (state) => {
+			debugger
       return localStorage.getItem('PID') || state.pid;
     },
     logs: (state) => {

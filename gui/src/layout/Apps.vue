@@ -24,7 +24,6 @@ const pages = computed(()=>{
 });
 const appPageSize = 8;
 const openWebview = (app)=>{
-	const proxy = "socks5://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;
 	store.commit('webview/setTarget', {
 		icon: app.icon,
 		name: app.name,
@@ -34,12 +33,17 @@ const openWebview = (app)=>{
 	
 	try{
 		// const appWindow = new Window(`${app.name}-window`);
-		const webview = new WebviewWindow(`${app.name}-webview`, {
+		const options = {
 			url: app.url,
 			proxyUrl: app.proxy,
 			title: app.name,
 			width:960
-		});
+		};
+		if(!app.url){
+			options.url = "http://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;;
+			delete options.proxyUrl;
+		}
+		const webview = new WebviewWindow(`${app.name}-webview`, options);
 		webview.once('tauri://created', function (d) {
 			console.log('tauri://created')
 			console.log(d)

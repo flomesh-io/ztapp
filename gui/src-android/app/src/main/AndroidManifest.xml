@@ -30,6 +30,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".CopyBinaryActivity" />
+				<activity android:name=".WebViewActivity" android:exported="true">
+						<intent-filter>
+							<action android:name="android.intent.action.VIEW" />
+							<category android:name="android.intent.category.DEFAULT" />
+							<category android:name="android.intent.category.BROWSABLE" />
+							<data android:scheme="ipc"
+									android:host="www.flomesh.ztm" />
+						</intent-filter>
+				</activity>
         <service 
 					android:name=".FloatingWindowService" 
 					android:exported="true" 

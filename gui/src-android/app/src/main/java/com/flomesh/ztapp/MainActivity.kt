@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 
+import android.util.Log
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -40,5 +41,20 @@ class MainActivity : TauriActivity() {
     private fun startFloatingWindowService() {
         val intent = Intent(this, FloatingWindowService::class.java)
         startService(intent)
+    }
+		
+    companion object {
+        @JvmStatic
+        fun startWebViewActivity(url: String, proxyHost: String, proxyPort: Int) {
+						Log.d("startWebViewActivity", url)
+            val context = MainActivity().applicationContext
+            val intent = Intent(context, WebViewActivity::class.java).apply {
+                putExtra("url", url)
+                putExtra("proxyHost", proxyHost)
+                putExtra("proxyPort", proxyPort)
+            }
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+        }
     }
 }

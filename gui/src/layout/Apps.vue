@@ -6,6 +6,7 @@ import AppService from '@/service/AppService';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Webview } from '@tauri-apps/api/webview'
 import { getCurrent } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core';
 const router = useRouter();
 const store = useStore();
 const appService = new AppService();
@@ -44,10 +45,19 @@ const openWebview = (app)=>{
 			width:960
 		};
 		if(!app.url){
-			options.url = "http://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;;
+			options.url = "http://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;
 			delete options.proxyUrl;
 		}
 		if(platform.value=='android'){
+			//=============
+			// invoke('load_webview_with_proxy', { 
+			// 	url: options.url, 
+			// 	proxyHost: (app?.port?.listen?.ip||'127.0.0.1'), 
+			// 	proxyPort: app?.port?.listen?.port
+			// });
+			location.href=options.url;
+		}	else if(platform.value=='windows'){
+			// windows API not available on mobile
 			options.x = 0;
 			options.y = 0;
 			options.height = 800;
@@ -55,12 +65,10 @@ const openWebview = (app)=>{
 			webview.once('tauri://created', function (d) {
 				console.log('tauri://created')
 				console.log(d)
-			// webview successfully created
 			});
 			webview.once('tauri://error', function (e) {
 				console.log('tauri://error')
 				console.log(e)
-			// an error happened creating the webview
 			});
 		} else {
 			const webview = new WebviewWindow(`${app.name}-webview`, options);

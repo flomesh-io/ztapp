@@ -5,7 +5,6 @@ use std::os::raw::c_char;
 use std::ptr;
 use std::thread;
 
-
 #[command]
 fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> {
 			// 创建一个通道用于线程输出
@@ -46,6 +45,33 @@ fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> 
 			
 }
 
+#[command]
+fn load_webview_with_proxy(url: String, proxy_host: String, proxy_port: i32) -> Result<(),()> {
+	#[cfg(target_os = "android")]
+	let handle = thread::spawn(move || -> Result<(), String> {
+				
+		unsafe {
+			
+			use j4rs::{Instance, InvocationArg, Jvm, JvmBuilder};
+			let jvm = Jvm::attach_thread_with_no_detach_on_drop().unwrap();
+			// 准备参数
+			let jurl = InvocationArg::try_from(url).unwrap();
+			let jproxy_host = InvocationArg::try_from(proxy_host).unwrap();
+			let jproxy_port = InvocationArg::try_from(proxy_port).unwrap();
+			
+			let args: [&InvocationArg; 3] = [&jurl, &jproxy_host, &jproxy_port];
+			jvm.invoke_static(
+				"com.flomesh.ztapp.MainActivity",     // The Java class to invoke
+				"startWebViewActivity",    // The static method of the Java class to invoke
+				&args // The `InvocationArg`s to use for the invocation - empty for this example
+			);
+			
+		 }
+		 Ok(())
+	});
+	Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 		tauri::Builder::default()
@@ -55,7 +81,7 @@ pub fn run() {
 				.plugin(tauri_plugin_process::init())
 				.plugin(tauri_plugin_fs::init())
 				.invoke_handler(tauri::generate_handler![
-					pipylib
+					pipylib,load_webview_with_proxy
 				])
 				.run(tauri::generate_context!())
 				.expect("error while running tauri application");

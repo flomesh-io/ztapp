@@ -7,6 +7,8 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Webview } from '@tauri-apps/api/webview'
 import { getCurrent } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrent as getCurrentDL } from '@tauri-apps/plugin-deep-link';
+
 const router = useRouter();
 const store = useStore();
 const appService = new AppService();
@@ -55,8 +57,10 @@ const openWebview = (app)=>{
 			// 	proxyHost: (app?.port?.listen?.ip||'127.0.0.1'), 
 			// 	proxyPort: app?.port?.listen?.port
 			// });
-			location.href=options.url;
-			// location.href="tauri://localhost/webview"
+			// location.href=options.url;
+			getCurrentDL().then((urls)=>{
+				console.log(urls)
+			})
 		}	else if(platform.value=='windows' && false){
 			// windows API not available on mobile
 			options.x = 0;

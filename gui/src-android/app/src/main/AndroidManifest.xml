@@ -36,7 +36,7 @@
 							<category android:name="android.intent.category.DEFAULT" />
 							<category android:name="android.intent.category.BROWSABLE" />
 							<data android:scheme="tauri"
-									android:host="localhost" android:pathPrefix="/webview" />
+									android:host="webview" />
 						</intent-filter>
 				</activity>
         <service 

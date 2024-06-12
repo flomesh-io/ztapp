@@ -56,6 +56,7 @@ const openWebview = (app)=>{
 			// 	proxyPort: app?.port?.listen?.port
 			// });
 			location.href=options.url;
+			// location.href="tauri://localhost/webview"
 		}	else if(platform.value=='windows' && false){
 			// windows API not available on mobile
 			options.x = 0;

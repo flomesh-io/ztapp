@@ -56,7 +56,7 @@ const openWebview = (app)=>{
 			// 	proxyPort: app?.port?.listen?.port
 			// });
 			location.href=options.url;
-		}	else if(platform.value=='windows'){
+		}	else if(platform.value=='windows' && false){
 			// windows API not available on mobile
 			options.x = 0;
 			options.y = 0;
@@ -71,6 +71,9 @@ const openWebview = (app)=>{
 				console.log(e)
 			});
 		} else {
+			if(platform.value=='windows'){
+				options.parent = getCurrent();
+			}
 			const webview = new WebviewWindow(`${app.name}-webview`, options);
 			webview.once('tauri://created', function (d) {
 				console.log('tauri://created')

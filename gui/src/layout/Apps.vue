@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import AppService from '@/service/AppService';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { Webview } from '@tauri-apps/api/webview'
-import { getCurrent } from '@tauri-apps/api/window'
+import { getCurrent,Window } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrent as getCurrentDL } from '@tauri-apps/plugin-deep-link';
 
@@ -61,24 +61,33 @@ const openWebview = (app)=>{
 			getCurrentDL().then((urls)=>{
 				console.log(urls)
 			})
-		}	else if(platform.value=='windows' && false){
+		}	else if(platform.value=='windows'){
 			// windows API not available on mobile
-			options.x = 0;
-			options.y = 0;
-			options.height = 800;
-			const webview = new Webview(getCurrent(),`${app.name}-webview`, options);
-			webview.once('tauri://created', function (d) {
-				console.log('tauri://created')
-				console.log(d)
-			});
-			webview.once('tauri://error', function (e) {
-				console.log('tauri://error')
-				console.log(e)
-			});
+			options.parent = getCurrent();
+			 const appWindow = new Window(`${app.name}-window`,options);
+			 
+			 appWindow.once('tauri://created', function (win) {
+				 console.log('tauri://created')
+				 console.log(win)
+				 options.x = 0;
+				 options.y = 0;
+				 options.height = 800;
+				 const webview = new Webview(appWindow,`${app.name}-webview`, options);
+				 webview.once('tauri://created', function (d) {
+				 	console.log('tauri://created')
+				 	console.log(d)
+				 });
+				 webview.once('tauri://error', function (e) {
+				 	console.log('tauri://error')
+				 	console.log(e)
+				 });
+			  // window successfully created
+			 });
+			 appWindow.once('tauri://error', function (e) {
+				 console.log('tauri://error')
+			   // an error happened creating the window
+			 });
 		} else {
-			if(platform.value=='windows'){
-				options.parent = getCurrent();
-			}
 			const webview = new WebviewWindow(`${app.name}-webview`, options);
 			webview.once('tauri://created', function (d) {
 				console.log('tauri://created')

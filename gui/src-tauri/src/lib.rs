@@ -53,7 +53,7 @@ fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> 
 }
 
 #[command]
-fn create_proxy_webview(
+async fn create_proxy_webview(
 	app: tauri::AppHandle,
 	label: String,
 	window_label: String,

@@ -53,6 +53,38 @@ fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> 
 }
 
 #[command]
+async fn create_wry_webview(
+	app: tauri::AppHandle,
+	label: String,
+	window_label: String,
+	proxy_host: String,
+	proxy_port: String,
+	curl: String,
+) -> Result<(),()> {
+	unsafe {
+		let window = app
+		    .get_window(&window_label)
+		    .expect("Failed to find window by label");
+				
+		let proxy_config = wry::ProxyConfig::Socks5(wry::ProxyEndpoint {
+			host: proxy_host,
+			port: proxy_port
+		});
+		let builder = wry::WebViewBuilder::new_as_child(&window);
+		let webview = builder
+		  .with_url(curl)
+			.with_bounds(wry::Rect {
+			    position: tauri::LogicalPosition::new(100, 100).into(),
+			    size: tauri::LogicalSize::new(960, 800).into(),
+			  })
+			.with_proxy_config(proxy_config)
+		  .build()
+		  .unwrap();
+	}
+	Ok(())
+}
+
+#[command]
 async fn create_proxy_webview(
 	app: tauri::AppHandle,
 	label: String,
@@ -127,7 +159,7 @@ pub fn run() {
 				.plugin(tauri_plugin_fs::init())
 				.plugin(tauri_plugin_deep_link::init())
 				.invoke_handler(tauri::generate_handler![
-					pipylib,create_proxy_webview
+					pipylib,create_proxy_webview,create_wry_webview
 				])
 				.run(tauri::generate_context!())
 				.expect("error while running tauri application");

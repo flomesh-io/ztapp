@@ -60,7 +60,7 @@ const openWebview = (app)=>{
 			getCurrentDL().then((urls)=>{
 				console.log(urls)
 			})
-		}	else if(platform.value=='windows' || true){
+		}	else if(platform.value=='windows'){
 			// windows API not available on mobile
 			options.parent = getCurrent();
 			
@@ -74,12 +74,19 @@ const openWebview = (app)=>{
 				 options.height = 800;
 				 console.log(appWindow)
 				 const label = `${app.name}-webview`;
-				 invoke('create_proxy_webview', {
+				 invoke('create_wry_webview', {
 						windowLabel: appWindow.label,
 						label,
 						curl: options.url,
-						proxyUrl: options.proxyUrl
+						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
+						proxyPort: `${app?.port?.listen?.port}`
 				 });
+				 // invoke('create_proxy_webview', {
+				 // 						windowLabel: appWindow.label,
+				 // 						label,
+				 // 						curl: options.url,
+				 // 						proxyUrl: options.proxyUrl
+				 // });
 				 // const webview = new Webview(appWindow, label, options);
 				 // webview.once('tauri://created', function (d) {
 				 // 	console.log('Webview://created')

@@ -1,9 +1,16 @@
+use lazy_static::lazy_static;
 use libloading::{Library, Symbol};
 use tauri::command;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
 use std::thread;
+use tauri_utils::config::{WebviewUrl, WindowConfig};
+use std::sync::{Arc, Mutex};
+use std::any::Any;
+use tauri::AppHandle;
+use url::Url;
+use tauri::Manager;
 
 #[command]
 fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> {
@@ -46,6 +53,44 @@ fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> 
 }
 
 #[command]
+fn create_proxy_webview(
+	app: tauri::AppHandle,
+	label: String,
+	window_label: String,
+	proxy_url: String,
+	curl: String,
+) -> Result<(),()> {
+	unsafe {
+		
+		// 尝试解析代理 URL 字符串
+		let proxy_url_ops = match Url::parse(&proxy_url) {
+				Ok(url) => Some(url),  // 解析成功，返回 Some(url)
+				Err(_) => None,        // 解析失败，返回 None
+		};
+		let options = WindowConfig {
+				label: label.clone(),
+				url: WebviewUrl::App(curl.parse().unwrap()),
+				proxy_url: proxy_url_ops.clone(),
+				fullscreen: true,
+				..Default::default()
+		};
+		let mut builder = tauri::WebviewBuilder::from_config(&options);
+		
+    // 根据窗口标签获取窗口的引用
+    let window = app
+        .get_window(&window_label)
+        .expect("Failed to find window by label");
+
+		window.add_child(
+			builder,
+			tauri::LogicalPosition::new(0, 0),
+			tauri::LogicalSize::new(960, 800),
+		).unwrap();
+	}
+	Ok(())
+}
+	
+#[command]
 fn load_webview_with_proxy(url: String, proxy_host: String, proxy_port: i32) -> Result<(),()> {
 	#[cfg(target_os = "android")]
 	let handle = thread::spawn(move || -> Result<(), String> {
@@ -82,7 +127,7 @@ pub fn run() {
 				.plugin(tauri_plugin_fs::init())
 				.plugin(tauri_plugin_deep_link::init())
 				.invoke_handler(tauri::generate_handler![
-					pipylib,load_webview_with_proxy
+					pipylib,create_proxy_webview
 				])
 				.run(tauri::generate_context!())
 				.expect("error while running tauri application");

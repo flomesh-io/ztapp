@@ -19,9 +19,12 @@ tauri-build = { version = "2.0.0-beta", features = [] }
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 tauri = { version = "=2.0.0-beta.22", features = ["macos-proxy", "unstable"] }
 tauri-utils = "=2.0.0-beta.17"
+tauri-runtime = "=2.0.0-beta.18"
 tauri-plugin-shell = "=2.0.0-beta.5"
+lazy_static = "1.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+url = "2.2"
 tauri-plugin-process = "=2.0.0-beta.5"
 tauri-plugin-http = "=2.0.0-beta.5"
 tauri-plugin-os = "=2.0.0-beta.5"

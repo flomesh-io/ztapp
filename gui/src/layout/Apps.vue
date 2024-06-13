@@ -62,6 +62,15 @@ const openWebview = (app)=>{
 			})
 		}	else if(platform.value=='windows'){
 			// windows API not available on mobile
+			
+			// invoke('create_wry_webview', {
+			// 						windowLabel: `${app.name}-window`,
+			// 						label:`${app.name}-webview`,
+			// 						curl: options.url,
+			// 						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
+			// 						proxyPort: `${app?.port?.listen?.port}`
+			// });
+			
 			options.parent = getCurrent();
 			
 			 const appWindow = new Window(`${app.name}-window`,options);
@@ -75,33 +84,33 @@ const openWebview = (app)=>{
 				 console.log(appWindow)
 				 const label = `${app.name}-webview`;
 				 invoke('create_wry_webview', {
-						windowLabel: appWindow.label,
-						label,
-						curl: options.url,
-						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
-						proxyPort: `${app?.port?.listen?.port}`
+				 						windowLabel: appWindow.label,
+				 						label,
+				 						curl: options.url,
+				 						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
+				 						proxyPort: `${app?.port?.listen?.port}`
 				 });
-				 // invoke('create_proxy_webview', {
-				 // 						windowLabel: appWindow.label,
-				 // 						label,
-				 // 						curl: options.url,
-				 // 						proxyUrl: options.proxyUrl
-				 // });
-				 // const webview = new Webview(appWindow, label, options);
-				 // webview.once('tauri://created', function (d) {
-				 // 	console.log('Webview://created')
-				 // 	console.log(d)
-				 // });
-				 // webview.once('tauri://error', function (e) {
-				 // 	console.log('Webview://error')
-				 // 	console.log(e)
-				 // });
-			  // window successfully created
 			 });
 			 appWindow.once('tauri://error', function (e) {
 				 console.log('Window://error')
-			   // an error happened creating the window
 			 });
+			 
+			  // invoke('create_proxy_webview', {
+			  // 						windowLabel: appWindow.label,
+			  // 						label,
+			  // 						curl: options.url,
+			  // 						proxyUrl: options.proxyUrl
+			  // });
+			  // const webview = new Webview(appWindow, label, options);
+			  // webview.once('tauri://created', function (d) {
+			  // 	console.log('Webview://created')
+			  // 	console.log(d)
+			  // });
+			  // webview.once('tauri://error', function (e) {
+			  // 	console.log('Webview://error')
+			  // 	console.log(e)
+			  // });
+			 // window successfully created
 		} else {
 			const webview = new WebviewWindow(`${app.name}-webview`, options);
 			webview.once('tauri://created', function (d) {

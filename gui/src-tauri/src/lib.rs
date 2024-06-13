@@ -65,19 +65,21 @@ async fn create_wry_webview(
 		let window = app
 		    .get_window(&window_label)
 		    .expect("Failed to find window by label");
-				
+		// let event_loop = tao::event_loop::EventLoop::new();
+		// let window = tao::window::WindowBuilder::new().build(&event_loop).unwrap();
 		let proxy_config = wry::ProxyConfig::Socks5(wry::ProxyEndpoint {
 			host: proxy_host,
 			port: proxy_port
 		});
+		
 		let builder = wry::WebViewBuilder::new_as_child(&window);
 		let webview = builder
 		  .with_url(curl)
+			.with_proxy_config(proxy_config)
 			.with_bounds(wry::Rect {
 			    position: tauri::LogicalPosition::new(100, 100).into(),
 			    size: tauri::LogicalSize::new(960, 800).into(),
 			  })
-			.with_proxy_config(proxy_config)
 		  .build()
 		  .unwrap();
 	}

@@ -21,7 +21,11 @@ const props = defineProps({
 	modelValue: {
 		type: String,
 		default: ()=> null
-	}
+	},
+	inline: {
+		type: Boolean,
+		default: false
+	},
 	
 });
 const emits = defineEmits(['select','update:modelValue']);
@@ -77,8 +81,8 @@ const select = () => {
 				<template #dropdownicon>
 					<span></span>
 				</template>
-				 <template #value="slotProps">
-					 <div class="topbar-mesh-select">
+				<template #value="slotProps">
+					<div class="topbar-mesh-select" v-if="props.inline">
 						 <div class="topbar-mesh-select-cell" >
 							 <div class="mb-1" v-if="slotProps.value">
 								<Status style="margin-right: 0 !important;"  :run="slotProps.value.connected" :errors="slotProps.value.errors" />
@@ -91,8 +95,20 @@ const select = () => {
 									{{ slotProps.placeholder }}
 							 </div>
 						 </div>
-					 </div>
-					</template>
+					</div>
+					<div class="flex" style="line-height: 16px;" v-else>
+						 <div class="w-2rem" v-if="slotProps.value">
+							<Status style="margin-right: 0 !important;"  :run="slotProps.value.connected" :errors="slotProps.value.errors" />
+						 </div>
+						 <div v-else class="pi pi-arrow-right-arrow-left"></div>
+						 <div v-if="slotProps.value"  v-tooltip.right="decodeURI(slotProps.value.name)">
+							<b class="text-sm">{{ decodeURI(slotProps.value.name) }}</b>
+						 </div>
+						 <div v-else>
+								{{ slotProps.placeholder }}
+						 </div>
+					</div>
+				</template>
 		</Select>
 		
 	<Select

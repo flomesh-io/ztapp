@@ -8,10 +8,14 @@ import { Webview } from '@tauri-apps/api/webview'
 import { getCurrent,Window } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrent as getCurrentDL } from '@tauri-apps/plugin-deep-link';
+import broswerPng from "@/assets/img/broswer.png";
+import PipyProxyService from '@/service/PipyProxyService';
+import MeshSelector from '@/views/mesh/common/MeshSelector.vue'
 
 const router = useRouter();
 const store = useStore();
 const appService = new AppService();
+const pipyProxyService = new PipyProxyService();
 const logs = computed(() => {
 	return store.getters['account/logs']
 });
@@ -23,7 +27,7 @@ const hide = () => {
 const clear = () => {
 }
 const pages = computed(()=>{
-	const _pages = Math.ceil((props.apps||[]).length/8);
+	const _pages = Math.ceil(((props.apps||[]).length + 1)/8);
 	return _pages>0?new Array(_pages):[];
 });
 const appPageSize = 8;
@@ -64,7 +68,7 @@ const openWebview = (app)=>{
 			getCurrentDL().then((urls)=>{
 				console.log(urls)
 			})
-		}	else if(platform.value=='windows' || true){
+		}	else if(platform.value=='windows'){
 			// windows API not available on mobile
 			options.parent = getCurrent();
 			
@@ -133,6 +137,47 @@ const manage = ref(false);
 const appPage = computed(()=>(page)=>{
 	return (props.apps||[]).filter((n,i) => i>=page*appPageSize && i< (page+1)*appPageSize);
 })
+const broswer = ref({
+	mesh:null,
+	show:false,
+	url:'',
+	port:null,
+	ports:[]
+});
+const openBroswer = () => {
+	broswer.value.show = true;
+	pipyProxyService.getMeshes()
+		.then(res => {
+			store.commit('account/setMeshes', res);
+		})
+		.catch(err => console.log('Request Failed', err)); 
+}
+const openBroswerContent = () => {
+	openWebview({
+		...broswer.value,
+		proxy: `socks5://${broswer.value.port?.listen?.ip||'127.0.0.1'}:${broswer.value.port?.listen?.port}`
+	})
+}
+const getPorts = (mesh) => {
+	broswer.value.mesh = mesh;
+	if(!broswer.value?.mesh?.name){
+		return
+	}
+	pipyProxyService.getPorts({
+		mesh:broswer.value?.mesh?.name,
+		ep:broswer.value?.mesh?.agent?.id,
+	})
+		.then(res => {
+			console.log(res)
+			broswer.value.ports = res || [];
+			broswer.value.ports.forEach((p)=>{
+				p.id = p.listen.port;
+				p.name = p.listen.port;
+			})
+		})
+		.catch(err => {
+		}); 
+}
 </script>
 
 <template>
@@ -150,11 +195,49 @@ const appPage = computed(()=>(page)=>{
 					</Button>
 				</div>
 			</div>
-	    <div class="terminal_body py-2 px-4" v-if="pages.length > 0">
+	    <div class="terminal_body py-2 px-4" v-if="broswer.show">
+				<div class="text-center">
+					<InputGroup class="search-bar" style="border-radius: 8px;" >
+					<MeshSelector 
+						v-if="broswer.show"
+						:form="false" 
+						:full="true" 
+						@select="getPorts"
+						innerClass="flex "/>
+						<Select v-if="broswer.mesh" size="small" class="w-full flex small"  v-model="broswer.port" :options="broswer.ports" optionLabel="name" :filter="broswer.ports.length>8" placeholder="Proxy"/>
+					</InputGroup>					
+				</div>
+				<div class="mt-3 text-center">
+					<InputGroup class="search-bar" style="border-radius: 8px;" >
+						
+						<Textarea v-model="broswer.url" :autoResize="true" class="drak-input bg-gray-900 text-white flex-1" placeholder="http://" rows="1" cols="30" />
+						<!-- <Button :disabled="!broswer.url" icon="pi pi-search"/> -->
+					</InputGroup>
+				</div>
+				<div class="mt-3 text-center flex">
+					<div class="flex-item pr-2">
+						<Button severity="secondary" class="w-full" style="height: 30px;" @click="() => broswer.show = false" label="Back"/>
+					</div>
+					<div class="flex-item pl-2" style="flex: 2;">
+						<Button class="w-full" style="height: 30px;" :disabled="!broswer.url" label="Open" @click="openBroswerContent"/>
+				</div>
+				</div>
+				
+				
+			</div>
+	    <div class="terminal_body py-2 px-4" v-else>
 				<Carousel :showNavigators="false" :value="pages" :numVisible="1" :numScroll="1" >
 						<template #item="slotProps">
 							<div class="pt-1" style="min-height: 220px;">
 								<div class="grid text-center" >
+								
+										<div @click="openBroswer" class="col-3 py-4 relative text-center">
+											<img :src="broswerPng" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;margin: auto;"/>
+											<div class="mt-1">
+												<b class="text-white opacity-90">Broswer</b>
+											</div>
+										</div>
+										
 										<div @click="openWebview(app)" class="col-3 py-4 relative text-center" v-for="(app) in appPage(slotProps.index)">
 											<i @click.stop="removeApp(app)" v-show="manage" class="pi pi-times  bg-primary-500 absolute pointer text-white-alpha-60 " style="width:16px;height: 16px;line-height: 16px;;border-radius: 50%; right: 16px;top: 12px;"  />
 											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;margin: auto;"/>
@@ -166,9 +249,6 @@ const appPage = computed(()=>(page)=>{
 							</div>
 						</template>
 				</Carousel>
-	    </div>
-	    <div class="terminal_body px-4 text-white-alpha-70 text-3xl text-center" style="padding-top: 25%;" v-else>
-				First, import an App
 	    </div>
 	</div>
 	</ScrollPanel>
@@ -290,7 +370,9 @@ const appPage = computed(()=>(page)=>{
 	.terminal_location {
 	  color: #4878c0;
 	}
-	
+	:deep(.p-inputgroup.search-bar .p-multiselect-label){
+		line-height: 30px;
+	}
 	.terminal_bling {
 	  color: #dddddd;
 	}

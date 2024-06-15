@@ -11,6 +11,7 @@ use std::any::Any;
 use tauri::AppHandle;
 use url::Url;
 use tauri::Manager;
+use tauri_plugin_shell::ShellExt;
 
 #[command]
 fn pipylib(lib: String, argv: Vec<String>, argc: i32) -> Result<String, String> {
@@ -94,6 +95,17 @@ async fn create_proxy_webview(
 	proxy_url: String,
 	curl: String,
 ) -> Result<(),()> {
+	create_proxy_webview_core(app.clone(), label.to_string(), window_label.to_string(), proxy_url.to_string(), curl);
+	Ok(())
+}
+
+fn create_proxy_webview_core(
+	app: tauri::AppHandle,
+	label: String,
+	window_label: String,
+	proxy_url: String,
+	curl: String,
+) -> Result<(),()> {
 	unsafe {
 
 		let mut options = WindowConfig {
@@ -110,18 +122,27 @@ async fn create_proxy_webview(
 			    );
 			options.proxy_url = proxy_url_ops
 		}
-		
-		let mut builder = tauri::WebviewBuilder::from_config(&options);
-		
+		println!("builder!");
+
+		let builder = tauri::WebviewBuilder::from_config(&options).on_navigation(|url| {
+		    // allow the production URL or localhost on dev
+			println!("on_navigation!");
+			if url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "ipc" {
+				println!("{}",url);
+				// create_proxy_webview_core(app, url.to_string(), url.to_string(), proxy_url.to_string(), url.to_string());
+			}
+			true
+		});
     let window = app
         .get_window(&window_label)
         .expect("Failed to find window by label");
 
-		window.add_child(
+		let webview = window.add_child(
 			builder,
 			tauri::LogicalPosition::new(0, 0),
-			tauri::LogicalSize::new(960, 800),
+			window.inner_size().unwrap(),
 		).unwrap();
+		
 	}
 	Ok(())
 }

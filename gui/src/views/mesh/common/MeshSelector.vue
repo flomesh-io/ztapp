@@ -100,7 +100,7 @@ const select = () => {
 						 <div class="w-2rem" v-if="slotProps.value">
 							<Status style="margin-right: 0 !important;"  :run="slotProps.value.connected" :errors="slotProps.value.errors" />
 						 </div>
-						 <div v-else class="pi pi-arrow-right-arrow-left"></div>
+						 <div v-else class="pi pi-globe mr-2"></div>
 						 <div v-if="slotProps.value"  v-tooltip.right="decodeURI(slotProps.value.name)">
 							<b class="text-sm">{{ decodeURI(slotProps.value.name) }}</b>
 						 </div>

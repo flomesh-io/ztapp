@@ -80,7 +80,7 @@ const openWebview = (app)=>{
 			getCurrentDL().then((urls)=>{
 				console.log(urls)
 			})
-		}	else if(platform.value=='windows' || true){
+		}	else if(platform.value=='windows'){
 			// windows API not available on mobile
 			options.parent = getCurrent();
 			

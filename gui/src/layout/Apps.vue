@@ -11,6 +11,7 @@ import { getCurrent as getCurrentDL } from '@tauri-apps/plugin-deep-link';
 import broswerPng from "@/assets/img/broswer.png";
 import PipyProxyService from '@/service/PipyProxyService';
 import MeshSelector from '@/views/mesh/common/MeshSelector.vue'
+import { apps } from '@/utils/app-store'
 
 const router = useRouter();
 const store = useStore();
@@ -26,8 +27,19 @@ const hide = () => {
 }
 const clear = () => {
 }
+
+const innerApps = computed(()=>{
+	const rtn = [];
+	apps.forEach((app)=>{
+		if(!(props.apps||[]).find((papp)=>papp.name == app.name)){
+			rtn.push({...app,loading:false})
+		}
+	});
+	return rtn;
+})
+const appLoading = ref({})
 const pages = computed(()=>{
-	const _pages = Math.ceil(((props.apps||[]).length + 1)/8);
+	const _pages = Math.ceil(((props.apps||[]).length + 1 + innerApps.value.length)/8);
 	return _pages>0?new Array(_pages):[];
 });
 const appPageSize = 8;
@@ -178,6 +190,19 @@ const getPorts = (mesh) => {
 		.catch(err => {
 		}); 
 }
+const installAPP = (app) => {
+	try{
+		appLoading.value[app.name] = true;
+			appService.newApp(app,()=>{
+				emits('reload','')
+				setTimeout(() => {
+					appLoading.value[app.name] = false;
+				},500)
+			})
+		console.log(config.value)
+	}catch(e){
+	}
+}
 </script>
 
 <template>
@@ -226,6 +251,8 @@ const getPorts = (mesh) => {
 				
 			</div>
 	    <div class="terminal_body py-2 px-4" v-else>
+				
+				
 				<Carousel :showNavigators="false" :value="pages" :numVisible="1" :numScroll="1" >
 						<template #item="slotProps">
 							<div class="pt-1" style="min-height: 220px;">
@@ -238,11 +265,22 @@ const getPorts = (mesh) => {
 											</div>
 										</div>
 										
-										<div @click="openWebview(app)" class="col-3 py-4 relative text-center" v-for="(app) in appPage(slotProps.index)">
+										<div :class="{'opacity-80':appLoading[app.name]}" @click="openWebview(app)" class="col-3 py-4 relative text-center" v-for="(app) in appPage(slotProps.index)">
 											<i @click.stop="removeApp(app)" v-show="manage" class="pi pi-times  bg-primary-500 absolute pointer text-white-alpha-60 " style="width:16px;height: 16px;line-height: 16px;;border-radius: 50%; right: 16px;top: 12px;"  />
 											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;margin: auto;"/>
+											<ProgressSpinner v-if="appLoading[app.name]" class="absolute opacity-60" style="width: 30px; height: 30px;margin-left: -35px;margin-top: 5px;" strokeWidth="10" fill="#000"
+											    animationDuration="2s" aria-label="Custom ProgressSpinner" />
 											<div class="mt-1">
 												<b class="text-white opacity-90">{{app.name}}</b>
+											</div>
+										</div>
+										
+										<div :class="{'opacity-80':appLoading[app.name],'opacity-60':!appLoading[app.name]}" @click="installAPP(app)" class="col-3 py-4 relative text-center " v-for="(app) in innerApps">
+											<img :src="app.icon" class="pointer" width="40" height="40" style="border-radius: 4px; overflow: hidden;margin: auto;"/>
+											<ProgressSpinner v-if="appLoading[app.name]" class="absolute opacity-60" style="width: 30px; height: 30px;margin-left: -35px;margin-top: 5px;" strokeWidth="10" fill="#000"
+											    animationDuration="2s" aria-label="Custom ProgressSpinner" />
+											<div class="mt-1">
+												<b class="text-white opacity-90 white-space-nowrap"><i class="pi pi-cloud-download mr-1" />{{app.name}}</b>
 											</div>
 										</div>
 								</div>

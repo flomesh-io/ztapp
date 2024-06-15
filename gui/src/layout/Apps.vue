@@ -42,11 +42,15 @@ const openWebview = (app)=>{
 		// const appWindow = new Window(`${app.name}-window`);
 		const options = {
 			url: app.url,
-			proxyUrl: app.proxy,
+			proxyUrl: !!app.url?app.proxy:'',
 			title: app.name,
 			width:960
 		};
-		if(!app.url){
+		
+		if(!!app.url){
+			options.proxyUrl = app.proxy
+		}
+		if(!options.url){
 			options.url = "http://"+(app?.port?.listen?.ip||'127.0.0.1')+':'+app?.port?.listen?.port;
 		}
 		if(platform.value=='android'){
@@ -60,47 +64,35 @@ const openWebview = (app)=>{
 			getCurrentDL().then((urls)=>{
 				console.log(urls)
 			})
-		}	else if(platform.value=='windows'){
+		}	else if(platform.value=='windows' || true){
 			// windows API not available on mobile
-			
-			// invoke('create_wry_webview', {
-			// 						windowLabel: `${app.name}-window`,
-			// 						label:`${app.name}-webview`,
-			// 						curl: options.url,
-			// 						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
-			// 						proxyPort: `${app?.port?.listen?.port}`
-			// });
-			
 			options.parent = getCurrent();
 			
 			 const appWindow = new Window(`${app.name}-window`,options);
 			 
 			 appWindow.once('tauri://created', function (win) {
-				 console.log('Window://created')
-				 console.log(win)
 				 options.x = 0;
 				 options.y = 0;
 				 options.height = 800;
-				 console.log(appWindow)
 				 const label = `${app.name}-webview`;
-				 invoke('create_wry_webview', {
-				 						windowLabel: appWindow.label,
-				 						label,
-				 						curl: options.url,
-				 						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
-				 						proxyPort: `${app?.port?.listen?.port}`
-				 });
+				  invoke('create_proxy_webview', {
+						windowLabel: appWindow.label,
+						label,
+						curl: options.url,
+						proxyUrl: options.proxyUrl||''
+				  });
 			 });
 			 appWindow.once('tauri://error', function (e) {
 				 console.log('Window://error')
 			 });
 			 
-			  // invoke('create_proxy_webview', {
-			  // 						windowLabel: appWindow.label,
-			  // 						label,
-			  // 						curl: options.url,
-			  // 						proxyUrl: options.proxyUrl
-			  // });
+			 // invoke('create_wry_webview', {
+			 // 						windowLabel: appWindow.label,
+			 // 						label,
+			 // 						curl: options.url,
+			 // 						proxyHost: app?.port?.listen?.ip||'127.0.0.1',
+			 // 						proxyPort: `${app?.port?.listen?.port}`
+			 // });
 			  // const webview = new Webview(appWindow, label, options);
 			  // webview.once('tauri://created', function (d) {
 			  // 	console.log('Webview://created')

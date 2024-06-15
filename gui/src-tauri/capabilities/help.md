@@ -1,3 +1,9 @@
+www.baidu.com#/:1  Uncaught (in promise) 
+os.platform not allowed on window ChatGPT-window, 
+webview ChatGPT-webview, 
+allowed windows: main, allowed webviews: , referenced by capability: main-capability, permission: allow-platform
+
+
 fs:allow-appcacheas-read-recursive not found
  expected one of app:default
  app:allow-app-hide

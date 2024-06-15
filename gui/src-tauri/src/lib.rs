@@ -95,22 +95,24 @@ async fn create_proxy_webview(
 	curl: String,
 ) -> Result<(),()> {
 	unsafe {
-		
-		// 尝试解析代理 URL 字符串
-		let proxy_url_ops = match Url::parse(&proxy_url) {
-				Ok(url) => Some(url),  // 解析成功，返回 Some(url)
-				Err(_) => None,        // 解析失败，返回 None
-		};
-		let options = WindowConfig {
-				label: label.clone(),
+
+		let mut options = WindowConfig {
+				label: label.to_string(),
 				url: WebviewUrl::App(curl.parse().unwrap()),
-				proxy_url: proxy_url_ops.clone(),
 				fullscreen: true,
 				..Default::default()
 		};
+
+		if !proxy_url.is_empty() {
+			let proxy_url_ops: Option<Url> = Some(
+			        Url::parse(&proxy_url)
+			            .expect("Failed to parse URL"),
+			    );
+			options.proxy_url = proxy_url_ops
+		}
+		
 		let mut builder = tauri::WebviewBuilder::from_config(&options);
 		
-    // 根据窗口标签获取窗口的引用
     let window = app
         .get_window(&window_label)
         .expect("Failed to find window by label");

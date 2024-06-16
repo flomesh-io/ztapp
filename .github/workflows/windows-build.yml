@@ -33,4 +33,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: release
-        path: ./gui/src-tauri/target/release/bundle/nsis/ZTAPP_${{ vars.APP_VERSION }}_x64-setup.exe
+        path: ./gui/src-tauri/target/release/bundle/nsis/ztapp_${{ vars.APP_VERSION }}_x64-setup.exe
+

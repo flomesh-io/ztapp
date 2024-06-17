@@ -6,7 +6,7 @@ import { useLayout } from '@/layout/composables/layout';
 import { useRouter } from 'vue-router';
 import PipyVersion from './PipyVersion.vue';
 import PipyLog from './PipyLog.vue';
-import Apps from './Apps.vue';
+import Apps from '@/views/apps/Apps.vue';
 import XeyeSvg from "@/assets/img/white.png";
 import HoverXeyeSvg from "@/assets/img/loading.png";
 import PipySvg from "@/assets/img/pipy-white.png";

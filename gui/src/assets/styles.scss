@@ -1028,3 +1028,18 @@ fieldset{
 		color: var(--primary-300) !important;
 	}
 }
+
+.p-terminal-prompt-label{
+	
+	color: #7eda28;
+}
+.p-terminal{
+	border: none;
+	background: rgba(56, 4, 40, 0.9) !important;
+}
+.p-terminal-welcome-message{
+	color: var(--primary-color);
+}
+.p-terminal-command-response{
+	color: #d5d0ce;
+}

@@ -1,5 +1,6 @@
 import _ from "lodash";
 import mesh from "./modules/mesh";
+import apps from "./modules/apps";
 import AppLayout from '@/layout/AppLayout.vue';
 
 const options = {
@@ -28,6 +29,9 @@ const options = {
 		    path: '/root',
 		    name: 'Root',
 		    component: () => import('@/layout/AppRoot.vue')
+		},
+		{
+			...apps
 		},
     {
         path: '/',

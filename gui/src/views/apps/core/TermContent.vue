@@ -1,6 +1,6 @@
 <template>
 	<Terminal
-		style="height: 320px;"
+		style="height: 325px;"
 		welcomeMessage="Welcome to ztm cli"
 		prompt="ztm $"
 		aria-label="ztm cli"
@@ -8,10 +8,10 @@
 </template>
 
 <script setup>
-	
 import { onMounted, onBeforeUnmount } from 'vue';
 import TerminalService from "primevue/terminalservice";
 import terminal from "@/assets/img/terminal.png";
+import { Command } from '@tauri-apps/plugin-shell';
 
 onMounted(() => {
     TerminalService.on('command', commandHandler);
@@ -22,27 +22,25 @@ onBeforeUnmount(() => {
 })
 
 const commandHandler = (text) => {
-    let response;
-    let argsIndex = text.indexOf(' ');
-    let command = argsIndex !== -1 ? text.substring(0, argsIndex) : text;
-
-    switch(command) {
-        case "date":
-            response = 'Today is ' + new Date().toDateString();
-            break;
-
-        case "greet":
-            response = 'Hola ' + text.substring(argsIndex + 1);
-            break;
-
-        case "random":
-            response = Math.floor(Math.random() * 100);
-            break;
-
-        default:
-            response = "Unknown command: " + command;
-    }
-    
-    TerminalService.emit('response', response);
+	const args = text.split(" ");
+	if(args.length<6){
+		const size = 6-args.length;
+		for(let i=0;i<size;i++){
+			args.push('')
+		}
+		args.forEach((arg,i)=>{
+			args[i] = arg.replaceAll(/—/g,"--");
+		})
+	}
+	commandHandlerCore(args);
 }
+const commandHandlerCore = async (args) => {
+	console.log(args)
+	let command = await Command.sidecar("bin/cli", args);
+	await command.spawn();
+	command.stdout.on('data', line => {
+		TerminalService.emit('response', line);
+	});
+}
+
 </script>

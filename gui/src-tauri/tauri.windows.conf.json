@@ -1,0 +1,31 @@
+{
+  "app": {
+    "windows": [
+      {
+				"dragDropEnabled": false,
+        "title": "ZTAPP",
+        "width": 455,
+        "height": 350,
+        "resizable": false,
+        "fullscreen": false,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol: asset:",
+        "connect-src": "ipc://localhost ipc://localhost/plugin:shell|open",
+        "img-src": "'self' asset: http://asset.localhost blob: data:",
+        "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com"
+      },
+			"assetProtocol": {
+				"enable": false,
+				"scope": []
+			},
+			"dangerousDisableAssetCspModification": false,
+			"freezePrototype": false,
+      "capabilities": ["windows-capability"]
+    },
+		"withGlobalTauri": true
+  },
+}

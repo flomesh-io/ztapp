@@ -1,0 +1,186 @@
+{
+  "$schema": "./schemas/desktop-schema.json",
+  "identifier": "windows-capability",
+  "description": "Capability for the windows window",
+  "windows": [
+    "*"
+  ],
+  "permissions": [
+    "path:default",
+    "event:default",
+    "window:default",
+    "app:default",
+    "resources:default",
+    "menu:default",
+    "tray:default",
+    "window:allow-set-title",
+    "window:allow-set-size",
+    "window:allow-set-resizable",
+    "window:allow-create",
+    "webview:allow-set-webview-size",
+    "webview:allow-internal-toggle-devtools",
+    "webview:allow-create-webview",
+    "webview:allow-create-webview-window",
+		"webview:allow-internal-toggle-devtools",
+		"webview:allow-print",
+		"webview:allow-reparent",
+		"webview:allow-set-webview-focus",
+		"webview:allow-set-webview-position",
+		"webview:allow-set-webview-size",
+		"webview:allow-set-webview-zoom",
+		"webview:allow-webview-close",
+		"webview:allow-webview-position",
+		"webview:allow-webview-size",
+    "process:allow-restart",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "bin/cli",
+          "args": [
+            {
+              "validator": ".+"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            }
+          ],
+          "sidecar": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "ls",
+          "cmd": "ls",
+          "sidecar": false
+        },
+        {
+          "name": "pipy",
+          "cmd": "pipy",
+          "args": [
+            {
+              "validator": ".+"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            }
+          ],
+          "sidecar": false
+        },
+        {
+          "name": "LD_LIBRARY_PATH=.",
+          "cmd": "LD_LIBRARY_PATH=.",
+          "args": [
+            {
+              "validator": ".+"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            },
+            {
+              "validator": ".*"
+            }
+          ],
+          "sidecar": false
+        },
+        {
+          "name": "cd",
+          "cmd": "cd",
+          "args": [
+            {
+              "validator": ".+"
+            }
+          ],
+          "sidecar": false
+        },
+        {
+          "name": "lsof",
+          "cmd": "lsof",
+          "args": [
+            "-i",
+            {
+              "validator": ".+"
+            }
+          ],
+          "sidecar": false
+        },
+        {
+          "name": "kill",
+          "cmd": "kill",
+          "args": [
+            {
+              "validator": ".+"
+            }
+          ],
+          "sidecar": false
+        }
+      ]
+    },
+    "shell:allow-kill",
+    "shell:allow-open",
+    "shell:allow-stdin-write",
+    "http:default",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        "http://127.0.0.1:*/*"
+      ]
+    },
+    "http:allow-fetch-cancel",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send",
+    "os:default",
+    "os:allow-arch",
+    "os:allow-exe-extension",
+    "os:allow-family",
+    "os:allow-locale",
+    "os:allow-os-type",
+    "os:allow-version",
+    "os:allow-platform",
+    "os:allow-hostname",
+    "fs:allow-app-read",
+    "fs:allow-app-read-recursive",
+    "fs:allow-appcache-read",
+    "fs:allow-appcache-read-recursive",
+    "fs:allow-resource-meta",
+    "fs:allow-resource-meta-recursive",
+    "fs:allow-resource-read",
+    "fs:allow-resource-read-recursive",
+    "fs:allow-resource-write",
+    "fs:allow-resource-write-recursive",
+    "deep-link:default",
+    "deep-link:allow-get-current",
+    "deep-link:default",
+    "process:default"
+  ]
+}

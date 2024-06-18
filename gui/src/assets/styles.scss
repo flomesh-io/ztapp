@@ -1035,6 +1035,7 @@ fieldset{
 }
 .p-terminal{
 	border: none;
+	border-radius: 0 !important;
 	background: rgba(56, 4, 40, 0.9) !important;
 }
 .p-terminal-welcome-message{
@@ -1042,4 +1043,7 @@ fieldset{
 }
 .p-terminal-command-response{
 	color: #d5d0ce;
+}
+.p-terminal-prompt-value,.p-terminal-command-value{
+	color: #f5f5f5 !important;
 }

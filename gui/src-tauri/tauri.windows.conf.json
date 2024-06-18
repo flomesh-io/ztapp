@@ -1,13 +1,4 @@
 {
-  "productName": "ztapp",
-  "version": "0.0.4",
-  "identifier": "com.flomesh.ztapp",
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "",
-    "frontendDist": "../../agent/gui"
-  },
   "app": {
     "windows": [
       {

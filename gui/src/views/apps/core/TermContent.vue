@@ -1,10 +1,12 @@
 <template>
-	<Terminal
-		style="height: 325px;"
-		welcomeMessage="Welcome to ztm cli"
-		prompt="ztm $"
-		aria-label="ztm cli"
-	/>
+	<div style="top: 0;position: fixed;bottom: 0;left: 0;right: 0;background: rgba(50, 4, 40, 1);">
+		<Terminal
+			style="height: 325px;"
+			welcomeMessage="Welcome to ztm cli"
+			prompt="ztm $"
+			aria-label="ztm cli"
+		/>
+	</div>
 </template>
 
 <script setup>

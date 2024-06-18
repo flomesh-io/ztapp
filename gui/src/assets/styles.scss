@@ -1034,9 +1034,9 @@ fieldset{
 	color: #7eda28;
 }
 .p-terminal{
-	border: none;
+	border: none !important;
 	border-radius: 0 !important;
-	background: rgba(56, 4, 40, 0.9) !important;
+	background: rgba(50, 4, 40, 1) !important;
 }
 .p-terminal-welcome-message{
 	color: var(--primary-color);

@@ -40,10 +40,10 @@ const openWebview = (app)=>{
 		}	else if(platform=='windows'){
 			// windows API not available on mobile
 			options.parent = getCurrent();
-			
-			 const appWindow = new Window(`${app.name}-window`,options);
+			delete options.proxyUrl;
+			const appWindow = new Window(`${app.name}-window`,options);
 			 
-			 appWindow.once('tauri://created', function (win) {
+			appWindow.once('tauri://created', function (win) {
 				 options.x = 0;
 				 options.y = 0;
 				 if(!options.height){
@@ -54,12 +54,12 @@ const openWebview = (app)=>{
 						windowLabel: appWindow.label,
 						label,
 						curl: options.url,
-						proxyUrl: ''//options.proxyUrl||''
+						proxyUrl: '';//options.proxyUrl
 				  });
-			 });
-			 appWindow.once('tauri://error', function (e) {
+			});
+			appWindow.once('tauri://error', function (e) {
 				 console.log('Window://error')
-			 });
+			});
 			 
 			 // invoke('create_wry_webview', {
 			 // 						windowLabel: appWindow.label,

@@ -34,3 +34,7 @@ jobs:
       with:
         name: release
         path: ./gui/src-tauri/target/debug/bundle/nsis/ztapp_${{ vars.APP_VERSION }}_x64-setup.exe
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ztm-cli
+        path: ./gui/src-tauri/bin/cli-x86_64-pc-windows-msvc.exe

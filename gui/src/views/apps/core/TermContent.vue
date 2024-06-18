@@ -38,8 +38,11 @@ const commandHandlerCore = async (args) => {
 	console.log(args)
 	let command = await Command.sidecar("bin/cli", args);
 	await command.spawn();
+	let rst = ""
 	command.stdout.on('data', line => {
-		TerminalService.emit('response', line);
+		console.log(line)
+		rst += line;
+		TerminalService.emit('response', rst);
 	});
 }
 

@@ -54,7 +54,7 @@ const openWebview = (app)=>{
 						windowLabel: appWindow.label,
 						label,
 						curl: options.url,
-						proxyUrl: '';//options.proxyUrl
+						proxyUrl: ''//options.proxyUrl
 				  });
 			});
 			appWindow.once('tauri://error', function (e) {

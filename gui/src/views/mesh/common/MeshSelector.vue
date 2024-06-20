@@ -39,6 +39,16 @@ onActivated(() => {
 const meshes = computed(() => {
 	return store.getters['account/meshes'] || []
 });
+const storeMesh = computed(() => {
+	return store.getters["account/selectedMesh"]
+});
+watch(()=>storeMesh,()=>{
+	if(!props.form){
+		selected.value = storeMesh.value
+	}
+},{
+	deep:true
+})
 const loaddata = () => {
 	selected.value = props.modelValue || (props.form?meshes.value[0]?.name:meshes.value[0]);
 	emits('select',selected.value);
@@ -66,12 +76,6 @@ const select = () => {
 		placeholder="Mesh" 
 		class="w-full"
 		:class="innerClass">
-<!-- 				    <template #optiongroup="slotProps">
-						<div class="flex align-items-center">
-								<i class="pi pi-star-fill " style="color: orange;"/>
-								<div>{{ slotProps.option.label }}</div>
-						</div>
-				</template> -->
 				<template #option="slotProps">
 						<div class="flex align-items-center">
 								<Status :run="slotProps.option.connected" :errors="slotProps.option.errors" />
@@ -123,12 +127,6 @@ const select = () => {
 		placeholder="Mesh" 
 		:style="full?'':'max-width: 300px;'"
 		:class="innerClass">
-<!-- 				    <template #optiongroup="slotProps">
-						<div class="flex align-items-center">
-								<i class="pi pi-star-fill " style="color: orange;"/>
-								<div>{{ slotProps.option.label }}</div>
-						</div>
-				</template> -->
 				<template #option="slotProps">
 						<div class="flex align-items-center">
 								<Status :run="slotProps.option.connected" :errors="slotProps.option.errors" />

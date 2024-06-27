@@ -54,6 +54,14 @@ export default function (rootDir, config) {
     meshError(e.toString())
   }
 
+  db.allApps(meshName).forEach(app => {
+    if (app.state === 'running' && app.username === username) {
+      var appname = app.name
+      if (app.tag) appname += '@' + app.tag
+      startApp(config.agent.id, app.provider, appname)
+    }
+  })
+
   var tlsOptions = {
     certificate: agentCert && agentKey ? {
       cert: agentCert,
@@ -539,9 +547,9 @@ export default function (rootDir, config) {
           }).then(() => {
             if ('isRunning' in state) {
               if (state.isRunning) {
-                startApp(ep, provider, app)
+                return startApp(ep, provider, app).then(response(201))
               } else {
-                stopApp(ep, provider, app)
+                return stopApp(ep, provider, app).then(response(201))
               }
             }
             return response(201)
@@ -558,6 +566,14 @@ export default function (rootDir, config) {
 
         'DELETE': function ({ provider, app }) {
           return uninstallApp(config.agent.id, provider, app).then(response(204))
+        },
+      },
+
+      '/api/apps/{provider}/{app}/log': {
+        'GET': function ({ provider, app }) {
+          return dumpAppLog(config.agent.id, provider, app).then(
+            ret => ret ? response(200, ret) : response(404)
+          )
         },
       },
 
@@ -962,34 +978,87 @@ export default function (rootDir, config) {
   }
 
   function startApp(ep, provider, app) {
+    logInfo(`App ${provider}/${app} starting on ${ep}...`)
     if (ep === config.agent.id) {
       if (apps.isRunning(provider, app)) return Promise.resolve()
       return (apps.isInstalled(provider, app)
         ? Promise.resolve()
         : installApp(ep, provider, app)
       ).then(() => {
-        apps.start(provider, app, username)
+        var nt = getAppNameTag(app)
+        db.setApp(meshName, provider, nt.name, nt.tag, { state: 'stopped' })
+        try {
+          apps.start(provider, app, username)
+          return new Timeout(1).wait().then(() => {
+            db.setApp(meshName, provider, nt.name, nt.tag, { username, state: 'running' })
+            logInfo(`App ${provider}/${app} started locally`)
+          })
+        } catch (e) {
+          db.setApp(meshName, provider, nt.name, nt.tag, { state: 'failed' })
+          var msg = e?.message || e?.toString?.() || 'undefined'
+          if (e?.stack) msg += ', stack: ' + e.stack.toString()
+          logError(`App ${provider}/${app} failed to start due to exception: ${msg}`)
+          return Promise.reject(e)
+        }
       })
     } else {
       return selectHubWithThrow(ep).then(
         (hub) => httpAgents.get(hub).request(
           'POST', `/api/forward/${ep}/apps/${provider}/${app}`,
           {}, JSON.encode({ isRunning: true })
+        ).then(
+          res => {
+            if (res.head?.status === 201) {
+              logInfo(`App ${provider}/${app} started remotely`)
+            } else {
+              logError(`App ${provider}/${app} remote startup failed, status = ${res.head?.status} ${res.head?.statusText}, body: ${res.body?.toString?.()}`)
+            }
+          }
         )
       )
     }
   }
 
   function stopApp(ep, provider, app) {
+    logInfo(`App ${provider}/${app} exiting on ${ep}...`)
     if (ep === config.agent.id) {
+      var nt = getAppNameTag(app)
+      db.setApp(meshName, provider, nt.name, nt.tag, { state: 'stopped' })
       apps.stop(provider, app)
+      logInfo(`App ${provider}/${app} exited locally`)
       return Promise.resolve()
     } else {
       return selectHubWithThrow(ep).then(
         (hub) => httpAgents.get(hub).request(
           'POST', `/api/forward/${ep}/apps/${provider}/${app}`,
           {}, JSON.encode({ isRunning: false })
+        ).then(
+          res => {
+            if (res.head?.status === 201) {
+              logInfo(`App ${provider}/${app} exited remotely`)
+            } else {
+              logError(`App ${provider}/${app} remote exiting failed, status = ${res.head?.status} ${res.head?.statusText}, body: ${res.body?.toString?.()}`)
+            }
+          }
         )
+      )
+    }
+  }
+
+  function dumpAppLog(ep, provider, app) {
+    if (ep === config.agent.id) {
+      return Promise.resolve(apps.log(provider, app))
+    } else {
+      return selectHubWithThrow(ep).then(
+        (hub) => httpAgents.get(hub).request(
+          'GET', `/api/forward/${ep}/apps/${provider}/${app}/log`
+        ).then(res => {
+          if (res.head?.status === 200) {
+            return JSON.decode(res.body)
+          } else {
+            return null
+          }
+        })
       )
     }
   }
@@ -1299,6 +1368,7 @@ export default function (rootDir, config) {
     uninstallApp,
     startApp,
     stopApp,
+    dumpAppLog,
     connectApp,
     downloadFile,
     syncFile,

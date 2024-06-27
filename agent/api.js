@@ -12,6 +12,7 @@ import Mesh from './mesh.js'
 //     - Services (others)
 //
 
+var rootDir = ''
 var meshes = {}
 
 function findMesh(name) {
@@ -20,10 +21,14 @@ function findMesh(name) {
   throw `Mesh not found: ${name}`
 }
 
-function init() {
+function init(dirname) {
+  rootDir = os.path.resolve(dirname)
   db.allMeshes().forEach(
     function (mesh) {
-      meshes[mesh.name] = Mesh(mesh)
+      meshes[mesh.name] = Mesh(
+        os.path.join(rootDir, 'meshes', mesh.name),
+        mesh
+      )
     }
   )
 }
@@ -53,7 +58,10 @@ function setMesh(name, mesh) {
     delete meshes[name]
   }
   mesh = db.getMesh(name)
-  meshes[name] = Mesh(mesh)
+  meshes[name] = Mesh(
+    os.path.join(rootDir, 'meshes', mesh.name),
+    mesh
+  )
   return getMesh(name)
 }
 
@@ -91,6 +99,77 @@ function getEndpointLog(mesh, ep) {
   } else {
     return m.remoteQueryLog(ep)
   }
+}
+
+function allFiles(mesh) {
+  var m = meshes[mesh]
+  if (!m) return Promise.resolve(null)
+  return m.discoverFiles()
+}
+
+function getFileInfo(mesh, pathname) {
+  var m = meshes[mesh]
+  if (!m) return Promise.resolve(null)
+  return m.findFile(pathname)
+}
+
+function getFileData(mesh, pathname) {
+  var m = meshes[mesh]
+  if (!m) return Promise.resolve(null)
+  return m.syncFile(pathname)
+}
+
+function getFileDataFromEP(mesh, ep, hash) {
+  var m = meshes[mesh]
+  if (!m) return Promise.resolve(null)
+  return m.downloadFile(ep, hash)
+}
+
+function allApps(mesh, ep) {
+  var m = meshes[mesh]
+  if (!m) return Promise.resolve([])
+  return m.discoverApps(ep)
+}
+
+function getApp(mesh, ep, provider, app) {
+  var m = findMesh(mesh)
+  if (!m) return Promise.resolve(null)
+  return m.findApp(ep, provider, app)
+}
+
+function setApp(mesh, ep, provider, app, state) {
+  var m = findMesh(mesh)
+  if (!m) return Promise.resolve(null)
+  return m.findApp(ep, provider, app).then(ret => {
+    if (ret) return
+    return m.installApp(ep, provider, app)
+  }).then(() => {
+    if (!('isRunning' in state)) return
+    if (state.isRunning) {
+      return m.startApp(ep, provider, app)
+    } else {
+      return m.stopApp(ep, provider, app)
+    }
+  }).then(() => {
+    if (!('isPublished' in state)) return
+    if (state.isPublished) {
+      return m.publishApp(ep, provider, app)
+    } else {
+      return m.unpublishApp(ep, provider, app)
+    }
+  }).then(() => m.findApp(ep, provider, app))
+}
+
+function delApp(mesh, ep, provider, app) {
+  var m = findMesh(mesh)
+  if (!m) return Promise.resolve()
+  return m.uninstallApp(ep, provider, app)
+}
+
+function connectApp(mesh, provider, app) {
+  var m = findMesh(mesh)
+  if (!m) return null
+  return m.connectApp(provider, app)
 }
 
 function allServices(mesh, ep) {
@@ -229,6 +308,15 @@ export default {
   allEndpoints,
   getEndpoint,
   getEndpointLog,
+  allFiles,
+  getFileInfo,
+  getFileData,
+  getFileDataFromEP,
+  allApps,
+  getApp,
+  setApp,
+  delApp,
+  connectApp,
   allServices,
   getService,
   setService,

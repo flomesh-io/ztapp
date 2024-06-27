@@ -78,26 +78,39 @@ async function request(url, method, params, config) {
 				});
 		}
 	} else {
-		return fetch(getUrl(url), {
-			method,
-			header:{
-				"Content-Type": "application/json"
-			},
-			body: !!params?JSON.stringify(params):null,
-			...config
-		}).then((res) => res.json()).then((res) => {
-				if (res.status >= 400) {
-					const error = new Error(res.message);
-					error.status = res.status;
-					return Promise.reject(error);
-				} else {
-					return res;
+		if(!!method && method != METHOD.GET){
+			return fetch(getUrl(url), {
+				method,
+				header:{
+					"Content-Type": "application/json"
+				},
+				body: !!params?JSON.stringify(params):null,
+				...config
+			}).then((res) => {
+				if(typeof(res) == 'object' && res.status >= 400){
+					return Promise.reject(res);
+				} else if(typeof(res) == 'object'){
+					return res.json();
 				}
 			}).catch((e)=>{
-			if(!!method && method != METHOD.GET){
 				toastMessage(e);
-			}
-		});
+			});
+		} else {
+			return fetch(getUrl(url), {
+				method,
+				header:{
+					"Content-Type": "application/json"
+				},
+				body: !!params?JSON.stringify(params):null,
+				...config
+			}).then((res) => {
+				if(typeof(res) == 'object' && res.status >= 400){
+					return Promise.reject(res);
+				} else if(typeof(res) == 'object'){
+					return res.json();
+				}
+			});
+		}
 	}
 }
 

@@ -7,13 +7,11 @@ import options from './options.js'
 var opt = options(pipy.argv, {
   defaults: {
     '--help': false,
-    '--reset': false,
-    '--database': '~/ztm.db',
+    '--database': '~/.ztm',
     '--listen': '127.0.0.1:7777',
   },
   shorthands: {
     '-h': '--help',
-    '-r': '--reset',
     '-d': '--database',
     '-l': '--listen',
   },
@@ -23,7 +21,7 @@ if (opt['--help']) {
   println('Options:')
   println('  -h, --help      Show available options')
   println('  -r, --reset     Delete the local database and start with a new one')
-  println('  -d, --database  Pathname of the database file (default: ~/ztm.db)')
+  println('  -d, --database  Pathname of the database directory (default: ~/.ztm)')
   println('  -l, --listen    Port number of the administration API (default: 127.0.0.1:7777)')
   return
 }
@@ -33,8 +31,25 @@ if (dbPath.startsWith('~/')) {
   dbPath = os.home() + dbPath.substring(1)
 }
 
-db.open(dbPath, opt['--reset'])
-api.init()
+try {
+  dbPath = os.path.resolve(dbPath)
+  var st = os.stat(dbPath)
+  if (st) {
+    if (!st.isDirectory()) {
+      throw `directory path already exists as a regular file: ${dbPath}`
+    }
+  } else {
+    os.mkdir(dbPath, { recursive: true })
+  }
+
+  db.open(os.path.join(dbPath, 'ztm.db'))
+  api.init(dbPath)
+
+} catch (e) {
+  if (e.stack) println(e.stack)
+  println('ztm:', e.toString())
+  return
+}
 
 //
 // Data model:
@@ -161,6 +176,7 @@ var routes = Object.entries({
   // Endpoint
   //   id: string (UUID)
   //   name: string
+  //   username: string
   //   certificate: string (PEM)
   //   isLocal: boolean
   //   ip: string
@@ -190,6 +206,90 @@ var routes = Object.entries({
       return api.getEndpointLog(mesh, ep).then(
         ret => ret ? response(200, ret) : response(404)
       )
+    },
+  },
+
+  //
+  // Files
+  //   hash: string
+  //   time: number
+  //   size: number
+  //
+
+  '/api/meshes/{mesh}/files': {
+    'GET': function ({ mesh }) {
+      return api.allFiles(mesh).then(
+        ret => response(200, ret)
+      )
+    }
+  },
+
+  '/api/meshes/{mesh}/files/*': {
+    'GET': function (params) {
+      return api.getFileInfo(params.mesh, params['*']).then(
+        ret => ret ? response(200, ret) : response(404)
+      )
+    }
+  },
+
+  '/api/meshes/{mesh}/file-data/*': {
+    'GET': function (params) {
+      return api.getFileData(params.mesh, params['*']).then(
+        ret => ret ? response(200, ret) : response(404)
+      )
+    }
+  },
+
+  '/api/meshes/{mesh}/endpoints/{ep}/file-data/{hash}': {
+    'GET': function ({ mesh, ep, hash }) {
+      return api.getFileDataFromEP(mesh, ep, hash).then(
+        ret => ret ? response(200, ret) : response(404)
+      )
+    },
+  },
+
+  //
+  // App
+  //   name: string
+  //   tag: string
+  //   provider: string
+  //   username: string
+  //   isRunning: boolean
+  //   isPublished: boolean
+  //   log: string[]
+  //
+
+  '/api/meshes/{mesh}/apps': {
+    'GET': function ({ mesh }) {
+      return api.allApps(mesh).then(
+        ret => response(200, ret)
+      )
+    },
+  },
+
+  '/api/meshes/{mesh}/endpoints/{ep}/apps': {
+    'GET': function ({ mesh, ep }) {
+      return api.allApps(mesh, ep).then(
+        ret => response(200, ret)
+      )
+    },
+  },
+
+  '/api/meshes/{mesh}/endpoints/{ep}/apps/{provider}/{app}': {
+    'GET': function ({ mesh, ep, provider, app }) {
+      return api.getApp(mesh, ep, provider, app).then(
+        ret => ret ? response(200, ret) : response(404)
+      )
+    },
+
+    'POST': function ({ mesh, ep, provider, app }, req) {
+      return api.setApp(mesh, ep, provider, app, JSON.decode(req.body)).then(
+        ret => response(201, ret)
+      )
+    },
+
+    'DELETE': function ({ mesh, ep, provider, app }) {
+      return api.delApp(mesh, ep, provider, app).then(response(204))
     },
   },
 
@@ -298,34 +398,67 @@ var routes = Object.entries({
 )
 
 var gui = new http.Directory('gui')
+var appReqMatch = new http.Match('/api/meshes/{mesh}/apps/{provider}/{app}/*')
+var appNotFound = pipeline($=>$.replaceMessage(new Message({ status: 404 })))
+
+var $params
 
 pipy.listen(opt['--listen'], $=>$
-  .serveHTTP(
-    function (req) {
-      var path = req.head.path
-      if (path.startsWith('/api/')) {
-        var params = null
-        var route = routes.find(r => Boolean(params = r.match(path)))
-        if (route) {
-          try {
-            var res = route.handler(params, req)
-            return res instanceof Promise ? res.catch(responseError) : res
-          } catch (e) {
-            return responseError(e)
+  .demuxHTTP().to($=>$
+    .pipe(
+      function (evt) {
+        if (evt instanceof MessageStart) {
+          var path = evt.head.path
+          if (path.startsWith('/api/')) {
+            if ($params = appReqMatch(path)) {
+              evt.head.path = '/' + $params['*']
+              return 'app'
+            } else {
+              return 'api'
+            }
+          } else {
+            return 'gui'
           }
         }
-      } else {
-        var res = gui.serve(req)
-        if (res) return res
+      }, {
+        'api': $=>$.replaceMessage(
+          req => {
+            var path = req.head.path
+            var params = null
+            var route = routes.find(r => Boolean(params = r.match(path)))
+            if (route) {
+              try {
+                var res = route.handler(params, req)
+                return res instanceof Promise ? res.catch(responseError) : res
+              } catch (e) {
+                return responseError(e)
+              }
+            }
+            return new Message({ status: 404 })
+          }
+        ),
+        'app': $=>$.pipe(
+          () => {
+            var p = api.connectApp(
+              $params.mesh,
+              $params.provider,
+              $params.app,
+            )
+            return p || appNotFound
+          }, () => ({ source: 'api' })
+        ),
+        'gui': $=>$.replaceMessage(
+          req => gui.serve(req) || new Message({ status: 404 })
+        ),
       }
-      return new Message({ status: 404 })
-    }
+    )
   )
 )
 
 function response(status, body) {
   if (!body) return new Message({ status })
   if (typeof body === 'string') return responseCT(status, 'text/plain', body)
+  if (body instanceof Data) return responseCT(status, 'application/octet-stream', body)
   return responseCT(status, 'application/json', JSON.encode(body))
 }
 
